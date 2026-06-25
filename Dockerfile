@@ -1,6 +1,6 @@
 # Multi-stage build: compile the Vite app, then serve the static bundle from nginx.
 # Build args inject the Supabase env at build time (Vite inlines VITE_* vars).
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 
 ARG VITE_SUPABASE_URL
