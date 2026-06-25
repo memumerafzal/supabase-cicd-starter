@@ -22,9 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production    # <- required-reviewer approval gate lives here
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
 
@@ -42,14 +42,14 @@ jobs:
         run: supabase functions deploy on-new-post --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image (tag + :prod + :latest)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
