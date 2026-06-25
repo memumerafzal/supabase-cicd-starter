@@ -1,5 +1,8 @@
 # supabase-cicd-starter
 
+[![CI](https://github.com/memumerafzal/supabase-cicd-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/memumerafzal/supabase-cicd-starter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A **production-grade GitHub Actions CI/CD pipeline**, demonstrated end-to-end on a
 small but real Supabase app (a feature-request board). The app is intentionally
 simple so the engineering *around* it is the focus: environment separation,
@@ -86,6 +89,7 @@ npm run e2e                                      # Playwright (needs supabase st
 - [Deployment & release process](docs/deployment.md)
 - [Secrets management](docs/secrets.md)
 - [Onboarding](docs/onboarding.md)
+- [Client demo script](docs/demo-script.md)
 
 ## Tech
 
