@@ -1,0 +1,27 @@
+name: Release
+
+# Tag-triggered release automation: generates release notes from the commits
+# since the previous tag and publishes a GitHub Release. Pair with SemVer tags
+# (vMAJOR.MINOR.PATCH). The tag itself also triggers the prod deploy.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub Release with auto-generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes

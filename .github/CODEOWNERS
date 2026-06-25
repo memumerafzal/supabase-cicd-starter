@@ -1,0 +1,5 @@
+# Every change requires review from the maintainer. Pipeline and infra files
+# are owned explicitly so they can carry stricter review.
+*                       @memumerafzal
+/.github/workflows/     @memumerafzal
+/supabase/migrations/   @memumerafzal

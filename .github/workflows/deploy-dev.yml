@@ -1,0 +1,62 @@
+name: Deploy — Dev
+
+# Auto-deploys the develop branch to the Dev environment:
+#  1. Push DB migrations to the Dev Supabase project
+#  2. Build + push a Docker image tagged :dev to GHCR
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Migrate + ship to Dev
+    runs-on: ubuntu-latest
+    environment: dev          # secrets scoped to this GitHub Environment
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push database migrations (Dev)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+          supabase db push
+
+      - name: Deploy Edge Functions (Dev)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy on-new-post --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image (:dev)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:dev
+          build-args: |
+            VITE_SUPABASE_URL=${{ vars.SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Summary
+        run: echo "### ✅ Dev deploy complete — ghcr.io/${{ github.repository }}:dev" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,65 @@
+name: Deploy — Production
+
+# Production deploys are gated: the `production` GitHub Environment requires a
+# manual approval (configure required reviewers in repo settings) before any
+# step runs. Triggered by pushing a version tag, or manual dispatch.
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Migrate + ship to Production
+    runs-on: ubuntu-latest
+    environment: production    # <- required-reviewer approval gate lives here
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push database migrations (Prod)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+          supabase db push
+
+      - name: Deploy Edge Functions (Prod)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy on-new-post --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image (tag + :prod + :latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:prod
+            ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            VITE_SUPABASE_URL=${{ vars.SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Summary
+        run: echo "### 🚀 Production deploy complete — ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"

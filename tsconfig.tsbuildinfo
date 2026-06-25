@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/supabaseclient.ts","./src/types.ts","./src/vite-env.d.ts","./src/components/auth.tsx","./src/components/newpostform.tsx","./src/components/postcard.tsx","./src/lib/board.ts","./src/lib/posts.test.ts","./src/lib/posts.ts"],"version":"5.9.3"}

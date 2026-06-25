@@ -1,0 +1,17 @@
+# Local "runs anywhere" stack: builds the frontend image and serves it.
+# The Supabase backend runs separately via the Supabase CLI (`supabase start`),
+# which spins up Postgres, Auth, Realtime and Studio on ports 54321-54323.
+#
+# Usage:
+#   supabase start                 # backend
+#   docker compose up --build      # frontend on http://localhost:8080
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-http://localhost:54321}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+    ports:
+      - "8080:80"
+    restart: unless-stopped
