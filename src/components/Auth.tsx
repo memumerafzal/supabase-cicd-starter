@@ -12,8 +12,12 @@ export default function Auth() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const fn = mode === 'signin' ? supabase.auth.signInWithPassword : supabase.auth.signUp
-    const { error } = await fn({ email, password })
+    // Call the methods directly (not via a detached reference) to preserve the
+    // GoTrueClient `this` binding.
+    const { error } =
+      mode === 'signin'
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password })
     if (error) setError(error.message)
     setLoading(false)
   }
